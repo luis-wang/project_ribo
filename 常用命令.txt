@@ -1,0 +1,17 @@
+1.将ui文件转换成.py文件
+
+pyuic4 new_main_window.ui -o new_main_window.py
+pyrcc4 ribo.qrc -o ribo_rc.py
+
+2.将py文件打包成exe文件
+C:\Python27\Scripts\cxfreeze D:\workspaces\aptana3\ribo\main_window.py --target-dir E:\2kkkkk\pyexe\ribo1 --base-name=Win32GUI
+
+
+我的笔记本上面 ：
+cxfreeze D:\data\aptana34workspace\pyqtexample\example1\carve_project\main_window.py --target-dir E:\2kkkkk\pyexe\ribo --base-name=Win32GUI
+
+
+
+
+
+

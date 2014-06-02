@@ -1,0 +1,40 @@
+像素与毫米的转换 
+转换还需要知道另一个参数：DPI（每英寸多少点） 
+象素数 / DPI = 英寸数 
+英寸数 * 25.4 = 毫米数  
+
+对于显示设备，不管是打印机还是屏幕，都有一种通用的方法 
+先用GetDeviceCaps(设备句柄，LOGPIXELSX)
+或者 
+GetDeviceCaps(设备句柄，LOGPIXELSY)获得设备每英寸的像素数 
+分别记为：px 和　py 
+一英寸等于25.4mm 
+那么毫米换算成像素的公式为　 
+水平方向的换算：　x * px /25.4 
+垂直方向的换算：　y * py /25.4 
+像素换算为毫米 x * 25.4 / px 
+在程序中这么写 
+MyControl.Height := 10{mm} * PixelsPerInch * 10 div 254; 
+分子和分母同乘以１０，将浮点数运算转化为整数运算，效率更高 
+
+
+javascript可以得到的显示器参数 
+
+screen. 
+
+availHeight 获取系统屏幕的工作区域高度，排除 Microsoft® Windows® 任务栏。  
+availWidth 获取系统屏幕的工作区域宽度，排除 Windows 任务栏。  
+bufferDepth 设置或获取用于画面外位图缓冲颜色的每像素位数。  
+colorDepth 获取用于目标设置或缓冲区的颜色每像素位数。  
+deviceXDPI 设置或获取系统屏幕水平每英寸点数(DPI)的数值。  
+deviceYDPI 设置或获取系统屏幕垂直每英寸点数(DPI)的数值。  
+fontSmoothingEnabled 获取用户是否在控制面板的显示设置中启用了圆整屏幕字体边角的选项。  
+height 获取屏幕的垂直分辨率。  
+logicalXDPI 获取系统屏幕水平每英寸点数(DPI)的常规数值。  
+logicalYDPI 获取系统屏幕垂直每英寸点数(DPI)的常规数值。  
+updateInterval 设置或获取屏幕的更新间隔。  
+width 获取屏幕的垂直分辨率。  
+
+
+常用的1024x768或800x600等标准的分辨率计算出来的dpi是一个常数：96，因此计算出来的毫米与像素的关系也约等于一个常数： 
+基本上 1毫米 约等于 3.78像素  
