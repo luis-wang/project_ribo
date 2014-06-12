@@ -449,11 +449,14 @@ class new_main_window(QMainWindow, new_main_window.Ui_MainWindow):
             #print '画布中的坐标:', xpos, ypos
         else:
             return 
-           
-        #找出点击了哪一个矩形元素，并更新选中的列表
-        self.tm.find_out_rect_by_point((xpos, ypos))     
-        #更新界面 
-        self.update()     
+        
+        if self.tm:
+            #找出点击了哪一个矩形元素，并更新选中的列表
+            self.tm.find_out_rect_by_point((xpos, ypos))     
+            #更新界面 
+            self.update()
+        else:
+            print '未初始化模板'   
         
 
     def showMenu(self, pos):
