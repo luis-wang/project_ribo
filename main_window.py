@@ -200,7 +200,7 @@ class new_main_window(QMainWindow, new_main_window.Ui_MainWindow):
         "默认打开一个图片来初始化界面作为模板"
         self.path = imgpath
         self.tm = Auto_tm(imgpath=imgpath)
-        self.update()
+        self.update_tmpl()
         
         
     def init_from_myown_tmpl(self):
@@ -381,16 +381,22 @@ class new_main_window(QMainWindow, new_main_window.Ui_MainWindow):
         self.tm = Manual_tm(int(w), int(h))
     
 
-    def update(self):
+    def update_tmpl(self):
         '''更新画布'''
+        #返回的是把所有的元素标识出来后的加上背景的图像 
         self.on_draw(self.tm.get_tmpl())
+    
+    
+    def update_sample(self):
+        "专用于更新模板"
+        self.on_draw(self.sample_frame)
 
 
     #重新画图
     def on_draw(self, data):
-        
-        h,w,_ = self.sample_frame.shape
-             
+        "默认更新的是模板"
+        h,w = data.shape[:2]
+  
         self.fig.clear()
         self.axes = self.fig.add_subplot(111, axisbg='r')
         
@@ -401,6 +407,8 @@ class new_main_window(QMainWindow, new_main_window.Ui_MainWindow):
         #x轴 都是间隔20毫米
         unit1 = 20
         xticks = np.arange(0, w, unit1)
+        print 'xticks:',xticks
+        
         self.axes.set_xticks(xticks)
         xlabels = [a*unit1 for a in range(xticks.size)]
         #自定义x轴的标签
@@ -411,8 +419,12 @@ class new_main_window(QMainWindow, new_main_window.Ui_MainWindow):
             else:
                 xls.append(' ')        
         self.axes.set_xticklabels(xls)
-                
+        
+        #-----------------------------------------------------
+        
         yticks = np.arange(0, h, unit1)
+        print 'yticks:',yticks
+        
         self.axes.set_yticks(yticks)
         ylabels = [a*unit1 for a in range(yticks.size)]
         #自定义y轴的标签
@@ -454,7 +466,7 @@ class new_main_window(QMainWindow, new_main_window.Ui_MainWindow):
             #找出点击了哪一个矩形元素，并更新选中的列表
             self.tm.find_out_rect_by_point((xpos, ypos))     
             #更新界面 
-            self.update()
+            self.update_tmpl()
         else:
             print '未初始化模板'   
         
@@ -484,7 +496,7 @@ class new_main_window(QMainWindow, new_main_window.Ui_MainWindow):
     def change_dir(self):
         "把水平方向的换成竖直方向，或反过来 x,y,w,h"
         self.tm.change_element_dir()
-        self.update() 
+        self.update_tmpl() 
     
       
     def create_tmpl(self):
@@ -500,7 +512,7 @@ class new_main_window(QMainWindow, new_main_window.Ui_MainWindow):
         "去除选中的元素"
         if confirm(self, '消息', '你确定要移除已选中的元素吗？') == 'yes':
             self.tm.rm_element()
-            self.update()
+            self.update_tmpl()
 
 
     def on_key_press(self, event):
@@ -520,19 +532,19 @@ class new_main_window(QMainWindow, new_main_window.Ui_MainWindow):
 
     def right_moved(self,dis=0):
         self.tm.move_elements('r', 1, dis)
-        self.update()
+        self.update_tmpl()
         
     def left_moved(self,dis=0):
         self.tm.move_elements('r', -1, dis)
-        self.update()
+        self.update_tmpl()
     
     def up_moved(self,dis=0):
         self.tm.move_elements('d', -1, dis)
-        self.update()
+        self.update_tmpl()
         
     def down_moved(self,dis=0):
         self.tm.move_elements('d', 1, dis)
-        self.update()
+        self.update_tmpl()
     
     def up_down(self):
         "上下移动"
@@ -629,7 +641,7 @@ class new_main_window(QMainWindow, new_main_window.Ui_MainWindow):
             #循环完成后更新 模板中的图
             self.tm.add_elements(ele_list)
             #添加完成后更新界面
-            self.update()           
+            self.update_tmpl()           
                         
             
             

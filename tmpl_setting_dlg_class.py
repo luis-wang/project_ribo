@@ -77,7 +77,7 @@ class set_paper_Dialog(QDialog, set_paper.Ui_Dialog):
         #先将主窗口中的模板类转换成手工类Manual_tm
         self.mainwin.set_manual_tm(float(w),float(h))
 
-        self.mainwin.update()        
+        self.mainwin.update_tmpl()        
         self.close()
         
 

@@ -125,7 +125,7 @@ class add_element_Dialog(QDialog, add_element.Ui_Dialog):
         self.mainwin.tm.add_elements(ele_list)
         
         #添加完成后更新界面
-        self.mainwin.update()
+        self.mainwin.update_tmpl()
 
 
 
