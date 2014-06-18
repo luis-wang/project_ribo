@@ -12,6 +12,7 @@ from PyQt4.QtCore import *
 from PyQt4 import QtGui
 from PyQt4 import QtCore
 
+import matplotlib.pyplot as plt
 from matplotlib.backend_bases import key_press_handler
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt4agg import (
@@ -98,7 +99,13 @@ class new_main_window(QMainWindow, new_main_window.Ui_MainWindow):
         self.canvas.mpl_connect('button_press_event', self.onclick) 
         
         self.canvas.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.canvas.customContextMenuRequested.connect(self.showMenu)            
+        self.canvas.customContextMenuRequested.connect(self.showMenu)  
+        
+        '''
+        mngr = plt.get_current_fig_manager()
+        # to put it into the upper left corner for example:
+        mngr.window.setGeometry(50,100,640, 545)                      
+        '''
         
         #去掉旧的self.myImageLabel，加上新的canvas
         self.verticalLayout.removeWidget(self.myImageLabel)
@@ -400,6 +407,7 @@ class new_main_window(QMainWindow, new_main_window.Ui_MainWindow):
         self.fig.clear()
         self.axes = self.fig.add_subplot(111, axisbg='r')
         
+        
         #设置网格
         self.axes.grid(b='on') #, which='major', axis='both',color='gray', linestyle='..', linewidth=1
 
@@ -444,6 +452,8 @@ class new_main_window(QMainWindow, new_main_window.Ui_MainWindow):
 
         self.axes.imshow(data, interpolation='nearest')
         self.canvas.draw()
+        
+    
   
     
     def onclick(self,event):
