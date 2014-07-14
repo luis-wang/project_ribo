@@ -289,9 +289,10 @@ class new_main_window(QMainWindow, new_main_window.Ui_MainWindow):
         
     def init_from_myown_tmpl(self):
         "打开的应该是一个样本，而不是模板"
+        print '---------------init_from_myown_tmpl-----------------'
         imgsrc = np.zeros((400,1000,3), np.uint8)
-        imgsrc = cv2.bitwise_not(imgsrc)        
-        self.sample_frame = Sample(imgsrc, isvideo=False, th=self.paper_threshold).imgsrc
+        imgsrc = cv2.bitwise_not(imgsrc)    #成白板    
+        self.sample_frame = Sample(imgsrc, isvideo=False, th=self.paper_threshold, init=False).imgsrc
         
         #self.on_draw(self.sample_frame.get_res(self.tm))
         self.on_draw(self.sample_frame)
