@@ -15,19 +15,16 @@ from element import Element
 class Sample(object):
 
     def __init__(self, imgsrc, isvideo=False, th=150):
-        '''
-        Constructor,这应该是一个已经获取到的确定的图片了 imgsrc
-        '
-        '''
+        'Constructor,这应该是一个已经获取到的确定的图片了 imgsrc'
         if imgsrc != None:
-            h,w,channel = imgsrc.shape
+            h, w, _ = imgsrc.shape
             self.w = w
             self.h = h
             
-            self.pw = 0; self.ph = 0 #找出最大的纸张的长与宽
+            self.pw, self.ph = 0, 0     #找出最大的纸张的长与宽
             
-            self.ele_list = []     #保存检测到的样本下面的所有ele元素
-            self.imgsrc = imgsrc
+            self.ele_list = []          #保存检测到的样本下面的所有ele元素
+            self.imgsrc = imgsrc.copy()
 
             self.bg = np.zeros(imgsrc.shape, np.uint8)
             

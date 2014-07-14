@@ -82,35 +82,45 @@ class new_main_window(QMainWindow, new_main_window.Ui_MainWindow):
         #初始化载入的图像 
         self.main_frame = QWidget()
         
-        #这里可以把QWidget的大小设置成功
-        #self.setMinimumSize(1200, 900)
-        #self.setMaximumSize(1200, 900)        
-                
-        self.fig = Figure((10.0, 10.0), dpi=dpi) #这里不知道怎么设置好
+        self.dpi = dpi
+        self.fig = Figure((5.0, 4.0), dpi=self.dpi)   
+
+        #只让坐标轴显示一个固定的宽度
+        fw = self.fig.get_figwidth()
+        fh = self.fig.get_figheight()
+
+        l_margin = lm / fw #.4in
+        b_margin = bm / fh #.3in
+        self.fig.subplots_adjust(left=l_margin,right=1,top=1,bottom=b_margin)
+        
+        
+        self.axes = self.fig.add_subplot(111)
+        self.axes.grid(b='on') #, which='major', axis='both',color='gray', linestyle='..', linewidth=1
+                      
+
         self.canvas = FigureCanvas(self.fig)   
-            
         self.canvas.setParent(self.main_frame)
         self.canvas.setFocusPolicy(Qt.StrongFocus)
         self.canvas.setFocus()
 
         self.mpl_toolbar = NavigationToolbar(self.canvas, self.main_frame)
-
-        self.canvas.mpl_connect('key_press_event', self.on_key_press) #matplotlib的键盘事件
-        self.canvas.mpl_connect('button_press_event', self.onclick) 
+        
+        #添加mpl的鼠标事件
+        self.canvas.mpl_connect('key_press_event',          self.on_key_press) #键盘事件
+        self.canvas.mpl_connect('button_press_event',       self.onclick) 
+        #self.fig.canvas.mpl_connect('motion_notify_event',      self.onMove)
         
         self.canvas.setContextMenuPolicy(Qt.CustomContextMenu)
         self.canvas.customContextMenuRequested.connect(self.showMenu)  
         
-        '''
-        mngr = plt.get_current_fig_manager()
-        # to put it into the upper left corner for example:
-        mngr.window.setGeometry(50,100,640, 545)                      
-        '''
-        
         #去掉旧的self.myImageLabel，加上新的canvas
         self.verticalLayout.removeWidget(self.myImageLabel)
         self.verticalLayout.addWidget(self.canvas)
-        self.verticalLayout.addWidget(self.mpl_toolbar)                     
+        self.verticalLayout.addWidget(self.mpl_toolbar) 
+        
+        #初始化一些与画图有关的东西
+        #self.greenVert,  = self.axes.plot(None, None, 'g--')  
+        #self.verticalLines = [self.greenVert]         
 
 
     def add_events(self):
@@ -160,6 +170,73 @@ class new_main_window(QMainWindow, new_main_window.Ui_MainWindow):
         self.connect(self.save_tm_action,     SIGNAL('triggered()'),      self.save_tm)
         #打开模板
         self.connect(self.open_tmpl_action,     SIGNAL('triggered()'),      self.open_tm)
+        
+    #重新画图
+    def on_draw(self, data):
+        "默认更新的是模板"
+        #self.fig.clear()  #每次都把图片去掉重新绘制，如果这样的话会使效率变低
+        h,w = data.shape[:2]
+
+        #设置标记
+        #x轴 都是间隔20毫米
+        unit1 = 20
+        xticks = np.arange(0, w, unit1)
+        #print 'xticks:',xticks
+        
+        self.axes.set_xticks(xticks)
+        xlabels = [a*unit1 for a in range(xticks.size)]
+        #自定义x轴的标签
+        xls = []
+        for i in range(len(xlabels)):
+            if (i+1)%3 == 0:
+                xls.append(str(xlabels[i]))
+            else:
+                xls.append(' ')        
+        self.axes.set_xticklabels(xls)
+        
+        #-----------------------------------------------------
+        
+        yticks = np.arange(0, h, unit1)
+        #print 'yticks:',yticks
+        
+        self.axes.set_yticks(yticks)
+        ylabels = [a*unit1 for a in range(yticks.size)]
+        #自定义y轴的标签
+        yls = []
+        for i in range(len(ylabels)):
+            if (i+1)%3 == 0:
+                yls.append(str(ylabels[i]))
+            else:
+                yls.append(' ')
+        self.axes.set_yticklabels(yls)        
+
+        #单位等标注  
+        #self.axes.set_xlabel(r'mm', fontsize=10)
+        self.axes.set_ylabel(r'mm', fontsize=10)              
+
+        self.axes.imshow(data, interpolation='nearest')
+        self.canvas.draw()
+        
+        #self.background = self.canvas.copy_from_bbox(self.axes.bbox)
+        
+
+    def onMove(self, event):
+        # cursor moves on the canvas
+        if event.inaxes:
+            #print 'event.xdata= ',event.xdata
+            # restore the clean background
+            self.canvas.restore_region(self.background)
+            ymin, ymax = self.axes.get_ylim()
+            x = event.xdata - 1
+
+            # draw each vertical line
+            #for line in self.verticalLines:
+            line = self.verticalLines[0]
+            line.set_xdata((x,))
+            line.set_ydata((ymin, ymax))
+            self.axes.draw_artist(line)
+
+            self.fig.canvas.blit(self.axes.bbox)        
         
     def init_gui(self):
         "开始画界面,也就是要先初始化好模板 "
@@ -321,20 +398,19 @@ class new_main_window(QMainWindow, new_main_window.Ui_MainWindow):
         if self.start_action.isChecked():
             #1.如果还没有设置模板
             if self.tm == None:
-                alert(self, '消息', '请先设置模板！方法：调整好模板后，或直接打开一个模板，\n然后点击“设为模板”按钮!')
+                #if confirm(self, '确认', '是否将当前设置为模板？') != 'yes':
+                alert(self, '警报', '请先新建模板或打开已保存的模板!')
+                self.start_action.setChecked(False)
+                return
+            elif len(self.tm.ele_list) == 0:
+                alert(self, '警报', '模板中没有元素!')
                 self.start_action.setChecked(False)
                 return                
             
-            if self.tm == None:
-                #if confirm(self, '确认', '是否将当前设置为模板？') != 'yes':
-                alert(self, '消息', '请先设置模板！方法：调整好模板后，或直接打开一个模板，\n然后点击“设为模板”按钮!')
-                self.start_action.setChecked(False)
-                return
-            else:
-                self.start_action.setChecked(True)
-            
             #------已有模板，直接开始匹配工作-------
             
+            self.start_action.setChecked(True)
+
             #1.打开摄像头
             res = self.open_camera()
             if res == -1:
@@ -399,60 +475,7 @@ class new_main_window(QMainWindow, new_main_window.Ui_MainWindow):
         self.on_draw(self.sample_frame)
 
 
-    #重新画图
-    def on_draw(self, data):
-        "默认更新的是模板"
-        h,w = data.shape[:2]
-  
-        self.fig.clear()
-        self.axes = self.fig.add_subplot(111, axisbg='r')
-        
-        
-        #设置网格
-        self.axes.grid(b='on') #, which='major', axis='both',color='gray', linestyle='..', linewidth=1
 
-        #设置标记
-        #x轴 都是间隔20毫米
-        unit1 = 20
-        xticks = np.arange(0, w, unit1)
-        print 'xticks:',xticks
-        
-        self.axes.set_xticks(xticks)
-        xlabels = [a*unit1 for a in range(xticks.size)]
-        #自定义x轴的标签
-        xls = []
-        for i in range(len(xlabels)):
-            if (i+1)%3 == 0:
-                xls.append(str(xlabels[i]))
-            else:
-                xls.append(' ')        
-        self.axes.set_xticklabels(xls)
-        
-        #-----------------------------------------------------
-        
-        yticks = np.arange(0, h, unit1)
-        print 'yticks:',yticks
-        
-        self.axes.set_yticks(yticks)
-        ylabels = [a*unit1 for a in range(yticks.size)]
-        #自定义y轴的标签
-        yls = []
-        for i in range(len(ylabels)):
-            if (i+1)%3 == 0:
-                yls.append(str(ylabels[i]))
-            else:
-                yls.append(' ')
-        self.axes.set_yticklabels(yls)        
-
-        #单位等标注  
-        #self.axes.set_xlabel(r'$\Delta_i$', fontsize=20)
-        self.axes.set_xlabel(r'mm', fontsize=15)
-        self.axes.set_ylabel(r'mm', fontsize=15)
-        #self.axes.set_title('Volume and percent change')                
-
-        self.axes.imshow(data, interpolation='nearest')
-        self.canvas.draw()
-        
     
   
     
