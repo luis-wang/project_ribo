@@ -68,6 +68,9 @@ class new_main_window(QMainWindow, new_main_window.Ui_MainWindow):
         self.updating = 'no' #界面初始化为没有实时更新
         self.paper_threshold = 150 #纸张的默认阀值
         
+        #样本图片
+        self.smp = Sample(None)
+        
         
         #新建模板窗口
         self.set_paper_Dialog   = set_paper_Dialog(self)
@@ -120,7 +123,17 @@ class new_main_window(QMainWindow, new_main_window.Ui_MainWindow):
         
         #初始化一些与画图有关的东西
         #self.greenVert,  = self.axes.plot(None, None, 'g--')  
-        #self.verticalLines = [self.greenVert]         
+        #self.verticalLines = [self.greenVert]
+        
+        self.show_status('Ready')
+
+        
+    
+    def show_status(self, msg):
+        #添加状态栏
+        #self.a = QtGui.QStatusBar.showMessage("System Status | Normal")
+        self.statusBar().showMessage(_fromUtf8(msg))        
+           
 
 
     def add_events(self):
@@ -375,14 +388,20 @@ class new_main_window(QMainWindow, new_main_window.Ui_MainWindow):
         "捕获视频来更新界面 ,只能有这一个计时器，不然会有冲突的"
         _, self.sample_frame = self.cap.read()
         
-        #如果已经设置了模板，那就需要把视频和模板实时比较
-        if self.tm != None:
-            self.on_draw(Sample(self.sample_frame).get_res(self.tm))
-        else:
-            self.on_draw(self.sample_frame)            
-        
         #sample1 = Sample(cv2.imread('img/template_altered.png'))  #先模拟只有一张图片的情况
         #self.on_draw(sample1.get_res(self.tm))
+        
+        self.smp.ini_img(self.sample_frame)
+        
+        self.on_draw(self.smp.find_paper())
+        
+        #self.on_draw(Sample(self.sample_frame).get_res(self.tm)) #有模板
+        
+        
+        #self.on_draw(self.sample_frame) #直接显示 
+        
+                   
+
         
         
     def set_as_tmpl(self):
@@ -408,8 +427,7 @@ class new_main_window(QMainWindow, new_main_window.Ui_MainWindow):
                 self.start_action.setChecked(False)
                 return                
             
-            #------已有模板，直接开始匹配工作-------
-            
+            #------已有模板，直接开始匹配工作-------            
             self.start_action.setChecked(True)
 
             #1.打开摄像头
@@ -428,13 +446,13 @@ class new_main_window(QMainWindow, new_main_window.Ui_MainWindow):
             self.close_camera()
             
 
+
+
     def capture_action(self):
         "如果已打开，那就拍照,"
         
         #将当前的样本与模板相比较 
-        
-        
-        
+
         ''' 
         #scene1:已经打开了摄像头
         if self.cap.isOpened():

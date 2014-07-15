@@ -16,36 +16,36 @@ class Sample(object):
 
     def __init__(self, imgsrc, isvideo=False, th=150, init=True):
         'Constructor,这应该是一个已经获取到的确定的图片了 imgsrc'
+        #样本识别需要的一些参数
+        self.paper_threshold = th
+        self.area_threashold = 200*200            
+            
+        self.pw, self.ph = 0, 0     #找出最大的纸张的长与宽
+        self.isvideo = isvideo      #isvideo表示些样本是怎么来的，如果来自视频，那其中扫描的纸张肯定小于整个imgsrc
+        self.ele_list = []          #保存检测到的样本下面的所有ele元素        
+        self.paper_found = False    #是否找到了纸张
+        
+        self.ini_img(imgsrc)
+        
+
+    def ini_img(self, imgsrc):
+        "初始化图片信息"
         if imgsrc != None:
-            h, w, _ = imgsrc.shape
-            self.w = w
-            self.h = h
-            
-            self.pw, self.ph = 0, 0     #找出最大的纸张的长与宽
-            
-            self.ele_list = []          #保存检测到的样本下面的所有ele元素
+            self.h, self.w, _ = imgsrc.shape
             self.imgsrc = imgsrc.copy()
-            
-            #只有当init为真时才全部初始化，有时仅是为了显示一个界面 
-            if init:
-                self.bg = np.zeros(imgsrc.shape, np.uint8)
+            self.bg = np.zeros((self.h, self.w, _), np.uint8)
                 
-                self.paper_found = False #是否找到了纸张
 
-                #############################################
-                self.isvideo = isvideo #isvideo表示些样本是怎么来的，如果来自视频，那其中扫描的纸张肯定小于整个imgsrc
-                            
-                #样本识别需要的一些参数
-                self.paper_threshold = th      #
-                self.area_threashold = 200*200
-                
-                self.find_paper()
-
-                #计算出所有的字体条形码的轮廓
-                self.calcu_blob_outline()
-                
-                #标识出所有的元素轮廓,然后生成一系列的元素列表
-                self.mark_object()
+    def init_smp(self):
+        "初始化样本图片中的轮廓等信息"
+        self.find_paper()
+        
+        #计算出所有的字体条形码的轮廓
+        self.calcu_blob_outline()
+        
+        #标识出所有的元素轮廓,然后生成一系列的元素列表
+        self.mark_object()                
+    
     
     def get_sap_img(self):
         "获取样本的图像格式"
@@ -56,13 +56,22 @@ class Sample(object):
         "找出最大的纸张，以便下面的计算"
         
         gray = cv2.cvtColor(self.imgsrc.copy(), cv2.COLOR_BGR2GRAY)
-        
-        ret,thresh = cv2.threshold(gray, self.paper_threshold, 255, cv2.THRESH_BINARY)
+        return gray
+    
+    
+        _, thresh = cv2.threshold(gray, self.paper_threshold, 255, cv2.THRESH_BINARY)
         
         dilate = cv2.dilate(thresh,None)
         erode = cv2.erode(dilate,None)
         
         #cv2.imshow('erode', erode)
+        
+        
+    
+    
+    
+    
+    
         
         
         # Find contours with cv2.RETR_CCOMP
@@ -109,6 +118,9 @@ class Sample(object):
         #未找到最大纸张，需要改变参数         
         else:
             print '未找到最大纸张，需要改变参数         '
+            
+            
+            
         
 
     def calcu_blob_outline(self):
