@@ -2,6 +2,7 @@
 '''
 本类包含的是，当匹配工作开始后从外面获取的样本图片，需要和模板相比较 
 '''
+import os,sys
 import cv2
 import uuid
 import numpy as np
@@ -30,10 +31,12 @@ class Sample(object):
 
     def ini_img(self, imgsrc):
         "初始化图片信息"
+        print " s 初始化图片信息"
         if imgsrc != None:
             self.h, self.w, _ = imgsrc.shape
-            self.imgsrc = imgsrc.copy()
+            self.imgsrc = imgsrc  #.copy()
             self.bg = np.zeros((self.h, self.w, _), np.uint8)
+            print ' e  -初始化图片信息-'
                 
 
     def init_smp(self):
@@ -54,9 +57,9 @@ class Sample(object):
     
     def find_paper(self):
         "找出最大的纸张，以便下面的计算"
+        print '------', type(self.imgsrc)
         
         gray = cv2.cvtColor(self.imgsrc.copy(), cv2.COLOR_BGR2GRAY)
-        return gray
     
     
         _, thresh = cv2.threshold(gray, self.paper_threshold, 255, cv2.THRESH_BINARY)
@@ -64,7 +67,8 @@ class Sample(object):
         dilate = cv2.dilate(thresh,None)
         erode = cv2.erode(dilate,None)
         
-        #cv2.imshow('erode', erode)
+        cv2.imshow('erode', erode)
+        cv2.waitKey()
         
         
     
@@ -120,8 +124,6 @@ class Sample(object):
             print '未找到最大纸张，需要改变参数         '
             
             
-            
-        
 
     def calcu_blob_outline(self):
         "对原图进行变形，把相关的blob放大，然后给下一步长轮廓做优化"
@@ -234,13 +236,17 @@ if __name__ == '__main__':
     imgsrc = np.zeros((100,400), np.uint8)
     imgsrc = cv2.bitwise_not(imgsrc)
     '''
-    imgsrc = cv2.imread('img/s1.png')
+    impath = 'img/79.jpg'
+    imgsrc = cv2.imread(impath)
     
-    img = Sample(imgsrc).get_res(None)
+    print os.path.exists(impath)
+    print 'path = ',cv2.__file__
+    print 'type == ',type(imgsrc)
     
-    
-    cv2.imshow('img',img)
-    cv2.waitKey(0)   
+    #img = Sample(imgsrc).get_res(None)
+    smp = Sample(imgsrc)
+    res = smp.find_paper()
+      
 
         
         

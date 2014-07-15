@@ -344,15 +344,16 @@ class new_main_window(QMainWindow, new_main_window.Ui_MainWindow):
         "打开摄像头"
         try:
             self.cap = cv2.VideoCapture(self.camera_index)
-            self.updating = 'yes'
-            self.ctimer.start(freq)
         except Exception,e:
             alert(self, '发生异常', '异常信息 ：'+str(e))  
         
         if not self.cap.isOpened():
             alert(self, '提示', '摄像头打开失败！\n请确认已经安装好摄像头!')
             return -1
+        #只有当成功打开摄像头后才可以启动定时器
         else:
+            self.updating = 'yes'
+            self.ctimer.start(freq)            
             return 0
     
     
