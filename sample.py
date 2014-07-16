@@ -13,15 +13,15 @@ from tmpl import TM
 from myutils import _getpxs
 from element import Element
 
-class Sample(object):
 
+class Sample(object):
     def __init__(self, imgsrc, isvideo=False, th=150, init=True):
         'Constructor,这应该是一个已经获取到的确定的图片了 imgsrc'
         #样本识别需要的一些参数
         self.paper_threshold = th
         self.area_threashold = 200*200            
             
-        self.pw, self.ph = 0, 0     #找出最大的纸张的长与宽
+        self.px, self.py, self.pw, self.ph = 0,0,0,0  #找出最大的纸张的长与宽
         self.isvideo = isvideo      #isvideo表示些样本是怎么来的，如果来自视频，那其中扫描的纸张肯定小于整个imgsrc
         self.ele_list = []          #保存检测到的样本下面的所有ele元素        
         self.paper_found = False    #是否找到了纸张
@@ -34,9 +34,10 @@ class Sample(object):
         print " s 初始化图片信息"
         if imgsrc != None:
             self.h, self.w, _ = imgsrc.shape
-            self.imgsrc = imgsrc  #.copy()
+            self.imgsrc = imgsrc
+            self.gray = cv2.cvtColor(imgsrc, cv2.COLOR_BGR2GRAY)
             self.bg = np.zeros((self.h, self.w, _), np.uint8)
-            print ' e  -初始化图片信息-'
+            
                 
 
     def init_smp(self):
@@ -53,106 +54,6 @@ class Sample(object):
     def get_sap_img(self):
         "获取样本的图像格式"
         return self.imgsrc
-    
-    
-    def find_paper(self):
-        "找出最大的纸张，以便下面的计算"
-        print '------', type(self.imgsrc)
-        
-        gray = cv2.cvtColor(self.imgsrc.copy(), cv2.COLOR_BGR2GRAY)
-    
-    
-        _, thresh = cv2.threshold(gray, self.paper_threshold, 255, cv2.THRESH_BINARY)
-        
-        dilate = cv2.dilate(thresh,None)
-        erode = cv2.erode(dilate,None)
-        
-        cv2.imshow('erode', erode)
-        cv2.waitKey()
-        
-        
-        # Find contours with cv2.RETR_CCOMP
-        contours,hierarchy = cv2.findContours(erode, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
-        
-        #print 'len :',len(contours)
-        max_area = 0
-        best_cnt = None
-        
-        #这里就找出了最大的一个矩形，也就是纸张
-        for i,cnt in enumerate(contours):
-            # Check if it is an external contour and its area is more than 100
-            if hierarchy[0,i,3] == -1:
-                    area = cv2.contourArea(cnt)         #面积
-                    perimeter = cv2.arcLength(cnt,True) #周长
-                    
-                    if area >= self.area_threashold:
-                        if area > max_area:
-                            max_area = area
-                            best_cnt = cnt
-        
-        #找到了最大的纸张
-        if best_cnt != None:
-            self.paper_found = True       
-            x,y,w,h = cv2.boundingRect(best_cnt)
-            self.pw = w
-            self.ph = h
-            
-            #print '最大周长：',w,h  , '源的周长：',self.w , self.h  
-            
-            cv2.rectangle(self.imgsrc, (x,y), (x+w,y+h), (100,255,0),2) 
-            #cv2.imshow('draw paper', self.imgsrc)
-            
-            cv2.imshow('self.imgsrc', self.imgsrc)
-            cv2.waitKey()
-            
-            #剪切出纸张
-            #cv2.imshow('paper', self.imgsrc[y:y+h,x:x+w])
-            #self.imgsrc = self.imgsrc[y:y+h,x:x+w]
-            
-            '''
-            cv2.imshow('most paper', self.imgsrc)
-            cv2.waitKey(0)
-            cv2.destroyAllWindows()
-            '''
-        
-        #未找到最大纸张，需要改变参数         
-        else:
-            print '未找到最大纸张，需要改变参数         '
-            
-            
-
-    def calcu_blob_outline(self):
-        "对原图进行变形，把相关的blob放大，然后给下一步长轮廓做优化"
-        #copy原图 ，有可能不是规整的纸张，需要从中找出一个最大的矩形
-        img = self.imgsrc.copy()
-        
-        #转换成灰度图
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        
-        #高斯模糊效果不错 ,需要反转一下
-        adap_gauss = cv2.adaptiveThreshold(img, 255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV,21,21)
-        
-        
-        #cv2.imshow('adap_gauss', adap_gauss)
-        #cv2.waitKey(0)
-        
-        '''
-        #Otsu's thresholding效果也不错
-        ret2,Otsu = cv2.threshold(img,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
-        cv2.imshow('Otsu', Otsu)
-        '''
-    
-        kernel = np.ones((7,7),np.uint8)
-        opening = cv2.morphologyEx(adap_gauss, cv2.MORPH_CLOSE, kernel)
-        
-        #cv2.imshow('opening', opening)
-    
-    
-        #cv2.waitKey(0)
-        #cv2.destroyAllWindows()
-        
-        #保存到实例的变量中
-        self.opening = opening
     
     
     def mark_object(self):
@@ -226,6 +127,102 @@ class Sample(object):
             '''
 
         return bg
+    
+    
+    
+    def find_paper(self):
+        "找出最大的纸张，以便下面的计算"
+
+        gray = self.gray.copy()
+    
+        _, thresh = cv2.threshold(gray, self.paper_threshold, 255, cv2.THRESH_BINARY)
+        
+        dilate = cv2.dilate(thresh,None)
+        erode = cv2.erode(dilate,None)
+        
+        #cv2.imshow('erode', erode)
+        #cv2.waitKey()
+        
+        
+        # Find contours with cv2.RETR_CCOMP
+        contours,hierarchy = cv2.findContours(erode, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
+        
+        #print 'len :',len(contours)
+        max_area = 0
+        best_cnt = None
+        
+        #这里就找出了最大的一个矩形，也就是纸张
+        for i,cnt in enumerate(contours):
+            # Check if it is an external contour and its area is more than 100
+            if hierarchy[0,i,3] == -1:
+                    area = cv2.contourArea(cnt)         #面积
+                    perimeter = cv2.arcLength(cnt,True) #周长
+                    
+                    if area >= self.area_threashold:
+                        if area > max_area:
+                            max_area = area
+                            best_cnt = cnt
+        
+        #找到了最大的纸张
+        if best_cnt != None:
+            self.paper_found = True       
+            self.px, self.py, self.pw, self.ph = cv2.boundingRect(best_cnt)
+            
+            #print '最大周长：',w,h  , '源的周长：',self.w , self.h
+            print '找出的矩形位置：',self.px, self.py, self.pw, self.ph  
+            
+            cv2.rectangle(self.imgsrc, (self.px, self.py), 
+                          (self.px+self.pw,self.py+self.ph), (100,255,0),1) 
+            
+            cv2.imshow('max rect', self.imgsrc)
+            cv2.waitKey()
+            
+            #剪切出纸张
+            #cv2.imshow('paper', self.imgsrc[y:y+h,x:x+w])
+            #self.imgsrc = self.imgsrc[y:y+h,x:x+w]
+        
+        #未找到最大纸张，需要改变参数         
+        else:
+            print '未找到最大纸张，需要改变参数         '
+            
+
+            
+
+    def calcu_blob_outline(self):
+        "对原图进行变形，把相关的blob放大，然后给下一步长轮廓做优化"
+        
+        #灰度图
+        img = self.gray.copy()
+        #blockSize 3,5,7等
+        w_bs = 3
+        h_bs = 17
+        
+        #高斯模糊效果不错 ,需要反转一下
+        # cv2.adaptiveThreshold(src, maxValue, adaptiveMethod, thresholdType, blockSize, C[, dst]) → dst
+        adap_gauss = cv2.adaptiveThreshold(img, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
+                                           cv2.THRESH_BINARY_INV,w_bs,h_bs)
+        
+        
+        cv2.imshow('adap_gauss', adap_gauss)
+
+        
+        '''
+        #Otsu's thresholding效果也不错
+        ret2,Otsu = cv2.threshold(img,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+        cv2.imshow('Otsu', Otsu)
+        '''
+    
+        kernel = np.ones((7,7),np.uint8)
+        opening = cv2.morphologyEx(adap_gauss, cv2.MORPH_CLOSE, kernel)
+        
+        cv2.imshow('opening', opening)
+        cv2.waitKey(0)
+        
+        #保存到实例的变量中
+        self.opening = opening
+                
+                
+    
         
 if __name__ == '__main__':
     '''
@@ -235,13 +232,12 @@ if __name__ == '__main__':
     impath = 'img/s1.png'
     imgsrc = cv2.imread(impath)
     
-    print os.path.exists(impath)
-    print 'path = ',cv2.__file__
-    print 'type == ',type(imgsrc)
+    
+    smp = Sample(imgsrc)
+    #res = smp.find_paper()
+    res = smp.calcu_blob_outline()
     
     #img = Sample(imgsrc).get_res(None)
-    smp = Sample(imgsrc)
-    res = smp.find_paper()
       
 
         
