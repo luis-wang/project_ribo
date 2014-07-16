@@ -71,13 +71,6 @@ class Sample(object):
         cv2.waitKey()
         
         
-    
-    
-    
-    
-    
-        
-        
         # Find contours with cv2.RETR_CCOMP
         contours,hierarchy = cv2.findContours(erode, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
         
@@ -108,6 +101,9 @@ class Sample(object):
             
             cv2.rectangle(self.imgsrc, (x,y), (x+w,y+h), (100,255,0),2) 
             #cv2.imshow('draw paper', self.imgsrc)
+            
+            cv2.imshow('self.imgsrc', self.imgsrc)
+            cv2.waitKey()
             
             #剪切出纸张
             #cv2.imshow('paper', self.imgsrc[y:y+h,x:x+w])
@@ -236,7 +232,7 @@ if __name__ == '__main__':
     imgsrc = np.zeros((100,400), np.uint8)
     imgsrc = cv2.bitwise_not(imgsrc)
     '''
-    impath = 'img/79.jpg'
+    impath = 'img/s1.png'
     imgsrc = cv2.imread(impath)
     
     print os.path.exists(impath)
