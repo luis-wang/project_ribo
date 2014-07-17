@@ -1,6 +1,10 @@
 #coding:utf8
 '''
 主窗口
+先设置好模板，不管是打开还是新建、
+再做样本识别
+再用来匹配
+
 '''
 import os
 import sys
@@ -38,15 +42,12 @@ from myutils import _fromUtf8,alert,confirm,get_resource,\
             get_relative_dir
 #from myutils import *
 
-
 QTextCodec.setCodecForTr(QTextCodec.codecForName("utf8"))
 Windows = sys.platform.lower().startswith(("win", "microsoft"))
 
 
 class new_main_window(QMainWindow, new_main_window.Ui_MainWindow):
-    """
-    #图像操作的主窗口
-    """               
+    "图像操作的主窗口"               
     def __init__(self,parent=None):
         super(new_main_window, self).__init__(None)
         self.setupUi(self)
@@ -134,7 +135,6 @@ class new_main_window(QMainWindow, new_main_window.Ui_MainWindow):
         #self.a = QtGui.QStatusBar.showMessage("System Status | Normal")
         self.statusBar().showMessage(_fromUtf8(msg))        
            
-
 
     def add_events(self):
         """
@@ -384,24 +384,6 @@ class new_main_window(QMainWindow, new_main_window.Ui_MainWindow):
             self.open_camera()
             return 
         
-        
-    def update_by_video(self):
-        "捕获视频来更新界面 ,只能有这一个计时器，不然会有冲突的"
-        _, self.sample_frame = self.cap.read()
-        
-        #sample1 = Sample(cv2.imread('img/template_altered.png'))  #先模拟只有一张图片的情况
-        #self.on_draw(sample1.get_res(self.tm))
-        
-        self.smp.ini_img(self.sample_frame)
-        
-        self.on_draw(self.smp.find_paper())
-        
-        #self.on_draw(Sample(self.sample_frame).get_res(self.tm)) #有模板
-        
-        
-        #self.on_draw(self.sample_frame) #直接显示 
-        
-                   
 
         
         
@@ -410,11 +392,53 @@ class new_main_window(QMainWindow, new_main_window.Ui_MainWindow):
         if self.sample_frame != None:
             self.tm = Auto_tm(img=self.sample_frame)
 
-        alert(self, '消息', '模板设置成功！')     
+        alert(self, '消息', '模板设置成功！') 
+    
+    
+    def manual_update(self):
+        self.mytimer = QtCore.QTimer()        
+        #将定时器与一个更新函数相连，这样可以时时更新界面 ,只要ctimer启动了就可以捕获图像 
+        QtCore.QObject.connect(self.mytimer, QtCore.SIGNAL("timeout()"), self.update_by_video)
+        self.mytimer.start(30)
+    
+        
+    def update_by_video(self):
+        "捕获视频来更新界面 ,只能有这一个计时器，不然会有冲突的"
+        
+        im = cv2.imread(ims[2])
+        print 'updating1.....'
+        self.sample_frame = im
+        
+        #_, self.sample_frame = self.cap.read()
+        
+        #sample1 = Sample(cv2.imread('img/template_altered.png'))  #先模拟只有一张图片的情况
+        #self.on_draw(sample1.get_res(self.tm))
+        
+        smp = Sample(self.sample_frame)
+        
+        smp.find_paper()
+        smp.calcu_blob_outline()
+        smp.mark_object()
+        
+        smp.compare_result(None)        
+
+        self.on_draw(smp.get_sap_img())
+        
+        #self.on_draw(Sample(self.sample_frame).get_res(self.tm)) #有模板
+
+        #self.on_draw(self.sample_frame) #直接显示
+        
+        
 
         
     def start_work(self):
         "摄像头开始工作否开始不工作"
+        
+        #test
+        self.manual_update()
+        
+        
+        """
         #先判断是不是已经选中了'开始工作'
         if self.start_action.isChecked():
             #1.如果还没有设置模板
@@ -444,7 +468,7 @@ class new_main_window(QMainWindow, new_main_window.Ui_MainWindow):
                          
         #手动不让它工作
         else:
-            self.close_camera()
+            self.close_camera()"""
             
 
 
@@ -494,10 +518,6 @@ class new_main_window(QMainWindow, new_main_window.Ui_MainWindow):
         "专用于更新模板"
         self.on_draw(self.sample_frame)
 
-
-
-    
-  
     
     def onclick(self,event):
         '点击界面时选择一个元素的操作'

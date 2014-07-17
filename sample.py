@@ -31,7 +31,7 @@ class Sample(object):
 
     def ini_img(self, imgsrc):
         "初始化图片信息"
-        print " s 初始化图片信息"
+
         if imgsrc != None:
             self.h, self.w, _ = imgsrc.shape
             self.imgsrc = imgsrc
@@ -90,10 +90,10 @@ class Sample(object):
 
 
     
-    def get_res(self, tm):
+    def compare_result(self, tm):
         "传递来的是模板tm, 返回此样本检测的最终结果 "
         #1.将样本复制一份
-        bg = self.imgsrc.copy()
+        #bg = self.imgsrc.copy()
         
         
         #2.找出所有的矩形
@@ -101,12 +101,12 @@ class Sample(object):
             x,y,w,h = e.x,e.y,e.w,e.h
             
             #1.标出矩形的框
-            cv2.rectangle(bg, (x,y), (x+w,y+h), (0,0,255),2) 
+            cv2.rectangle(self.imgsrc, (x,y), (x+w,y+h), (0,0,255),1) 
             
             #2.画出每个条形码的中心
             centroid_x = x + int(w/2)
             centroid_y = y + int(h/2)
-            cv2.circle(bg, (centroid_x,centroid_y), 6, (0,255,0),-1) #绿色点
+            cv2.circle(self.imgsrc, (centroid_x,centroid_y), 6, (0,255,0),-1) #绿色点
             
             #3.在模板中查找是不是有有相应的矩形
             '''
@@ -126,9 +126,6 @@ class Sample(object):
                 cv2.circle(bg, (centroid_x,centroid_y), 10, (255,0,0),-1)            
             '''
 
-        return bg
-    
-    
     
     def find_paper(self):
         "找出最大的纸张，以便下面的计算"
@@ -174,8 +171,8 @@ class Sample(object):
             cv2.rectangle(self.imgsrc, (self.px, self.py), 
                           (self.px+self.pw,self.py+self.ph), (100,255,0),1) 
             
-            cv2.imshow('max rect', self.imgsrc)
-            cv2.waitKey()
+            #cv2.imshow('max rect', self.imgsrc)
+            #cv2.waitKey()
             
             #剪切出纸张
             #cv2.imshow('paper', self.imgsrc[y:y+h,x:x+w])
@@ -184,8 +181,8 @@ class Sample(object):
         #未找到最大纸张，需要改变参数         
         else:
             print '未找到最大纸张，需要改变参数         '
-            
-
+        
+        return self.imgsrc
             
 
     def calcu_blob_outline(self):
@@ -203,7 +200,7 @@ class Sample(object):
                                            cv2.THRESH_BINARY_INV,w_bs,h_bs)
         
         
-        cv2.imshow('adap_gauss', adap_gauss)
+        #cv2.imshow('adap_gauss', adap_gauss)
 
         
         '''
@@ -215,12 +212,17 @@ class Sample(object):
         kernel = np.ones((7,7),np.uint8)
         opening = cv2.morphologyEx(adap_gauss, cv2.MORPH_CLOSE, kernel)
         
-        cv2.imshow('opening', opening)
-        cv2.waitKey(0)
+        #cv2.imshow('opening', opening)
+        #cv2.waitKey(0)
         
         #保存到实例的变量中
         self.opening = opening
-                
+
+
+ims = ['img/riboimg/s1.png',
+       'img/riboimg/y1.png',
+       'img/riboimg/y2.png',
+       'img/riboimg/y3.png',]               
                 
     
         
@@ -229,13 +231,21 @@ if __name__ == '__main__':
     imgsrc = np.zeros((100,400), np.uint8)
     imgsrc = cv2.bitwise_not(imgsrc)
     '''
-    impath = 'img/s1.png'
+    impath = ims[0]
     imgsrc = cv2.imread(impath)
     
     
     smp = Sample(imgsrc)
-    #res = smp.find_paper()
-    res = smp.calcu_blob_outline()
+    
+    smp.find_paper()
+    smp.calcu_blob_outline()
+    smp.mark_object()
+    
+    smp.compare_result(None)
+    
+    cv2.imshow('winname', smp.get_sap_img())
+    cv2.waitKey()
+    
     
     #img = Sample(imgsrc).get_res(None)
       

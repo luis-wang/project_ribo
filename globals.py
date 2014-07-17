@@ -26,6 +26,11 @@ init_from = 'path'  #如果设置为path，那直接就从给定的图像打开
 init_img_name = r'D:\data\aptana34workspace\pyqtexample\example1\carve_project\img\img_1931_s.jpg'
 
 
+#一些测试的图片
+ims = ['img/riboimg/s1.png',
+       'img/riboimg/y1.png',
+       'img/riboimg/y2.png',
+       'img/riboimg/y3.png',]
 
 
 
