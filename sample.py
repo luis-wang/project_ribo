@@ -135,6 +135,9 @@ class Sample(object):
         _, thresh = cv2.threshold(gray, self.paper_threshold, 255, cv2.THRESH_BINARY)
         
         dilate = cv2.dilate(thresh,None)
+        cv2.imshow('dilate', dilate)
+        
+        
         erode = cv2.erode(dilate,None)
         
         #cv2.imshow('erode', erode)
