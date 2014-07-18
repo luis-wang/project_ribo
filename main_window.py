@@ -115,8 +115,8 @@ class new_main_window(QMainWindow, new_main_window.Ui_MainWindow):
         
         #添加mpl的鼠标事件
         self.canvas.mpl_connect('key_press_event',          self.on_key_press) #键盘事件
-        self.canvas.mpl_connect('button_press_event',       self.onclick) 
-        #self.fig.canvas.mpl_connect('motion_notify_event',      self.onMove)
+        self.canvas.mpl_connect('button_press_event',       self.onclick)
+        #self.canvas.mpl_connect('motion_notify_event',      self.onMove)
         
         self.canvas.setContextMenuPolicy(Qt.CustomContextMenu)
         self.canvas.customContextMenuRequested.connect(self.showMenu)  
@@ -237,6 +237,9 @@ class new_main_window(QMainWindow, new_main_window.Ui_MainWindow):
 
     def onMove(self, event):
         # cursor moves on the canvas
+        print 'onMove....'
+        return 
+    
         if event.inaxes:
             #print 'event.xdata= ',event.xdata
             # restore the clean background
@@ -537,13 +540,18 @@ class new_main_window(QMainWindow, new_main_window.Ui_MainWindow):
         else:
             return 
         
-        if self.tm:
-            #找出点击了哪一个矩形元素，并更新选中的列表
-            self.tm.find_out_rect_by_point((xpos, ypos))     
-            #更新界面 
-            self.update_tmpl()
+        #如果界面还没有更新，就可以再修改模板
+        if self.tm and self.updating == 'no':
+            #找出点击了哪一个矩形元素，并更新选中的列表 ,返回了选择中的那个
+            e = self.tm.find_out_rect_by_point((xpos, ypos))
+            if e: 
+                #更新界面 
+                self.update_tmpl()
+                x,y,w,h = e.x, e.y, e.w, e.h
+                self.show_status("选中文件位置：左:%d,下:%d,宽:%d,高=%d" % (x,y,w,h))
         else:
-            print '未初始化模板'   
+            print '界面正在更新，或没有设计模板！'
+            pass   
         
 
     def showMenu(self, pos):

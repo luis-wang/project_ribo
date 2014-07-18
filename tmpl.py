@@ -113,6 +113,8 @@ class TM(object):
         "通过一个点判断是不是在相应的相应元素中，如果是就直接返回相应元素
         "pnt = (x,y),rects = [(x,y,w,h),(x1,y1,w1,h1),]
         """
+        select_ele = None #选中的元素
+        
         for e in self.ele_list:
             x,y,w,h = e.x, e.y, e.w, e.h
             
@@ -122,11 +124,20 @@ class TM(object):
             
             #确实满足在某个选中的元素内
             if inwidth and inheight:
+
                 if e in self.selected_elements:
                     self.selected_elements.remove(e)
                 else:
                     self.selected_elements.append(e)
-                break             
+                
+                select_ele = e
+                break 
+        
+        return select_ele
+    
+    
+    def get_ele_props(self, e):
+        "根据元素，找到相应的属性，比较宽高，距离各边的长度"
         
         
     def set_as_template(self):
