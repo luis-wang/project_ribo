@@ -14,9 +14,7 @@ from myutils import _fromUtf8,alert
 
     
 class add_element_Dialog(QDialog, add_element.Ui_Dialog):
-    """
-    #添加元素的对话框
-    """
+    "添加元素的对话框"
     def __init__(self,parent=None):
         QDialog.__init__(self,parent)
         self.setupUi(self)

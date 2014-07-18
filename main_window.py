@@ -141,9 +141,7 @@ class new_main_window(QMainWindow, new_main_window.Ui_MainWindow):
            
 
     def add_events(self):
-        """
-        "自定义一些事件
-        """
+        "自定义一些事件"
         #全局设置
         self.connect(self.settingAction,    SIGNAL("triggered()"),      self.global_set)
         #添加新元素
